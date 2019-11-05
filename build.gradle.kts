@@ -24,9 +24,6 @@ repositories {
 }
 
 dependencies {
-    // This dependency is found on compile classpath of this component and consumers.
-    implementation("com.google.guava:guava:27.0.1-jre")
-
     // Use the latest Groovy version for Spock testing
     testImplementation("org.codehaus.groovy:groovy-all:2.5.6")
 
