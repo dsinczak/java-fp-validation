@@ -2,11 +2,9 @@ package dsinczak.fp.validation.javadsl;
 
 import dsinczak.fp.validation.javadsl.Message.ComplexMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -100,6 +98,10 @@ public abstract class ValidationResult {
 
     public static BinaryOperator<ValidationResult> concat = (a, b) -> concat(a,b);
 
+    public static ValidationResult concatMany(ValidationResult ... results) {
+        return Arrays.stream(results).reduce(success(), concat);
+    }
+
     public static ValidationResult concat(ValidationResult a, ValidationResult b) {
         if (a instanceof SuccessfulValidation) {
             if (b instanceof SuccessfulValidation) {
@@ -139,6 +141,8 @@ public abstract class ValidationResult {
     public static ValidationResult failed(Message message) { return new FailedValidation(message); }
 
     public static ValidationResult failed(String message) { return new FailedValidation(Message.of(message)); }
+
+    public static ValidationResult failed(String ... messages) { return new FailedValidation(Arrays.stream(messages).map(Message::of).collect(Collectors.toList())); }
 
     public static ValidationResult failed(ComplexMessage.Code code) { return new FailedValidation(Message.of(code)); }
 

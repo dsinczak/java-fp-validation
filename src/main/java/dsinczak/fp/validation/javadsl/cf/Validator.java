@@ -5,6 +5,7 @@ import dsinczak.fp.validation.javadsl.Message.ComplexMessage;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -23,9 +24,7 @@ public interface Validator<T> extends Function<T, CompletableFuture<ValidationRe
     CompletableFuture<ValidationResult> validate(T t);
 
     @Override
-    default CompletableFuture<ValidationResult> apply(T t) {
-        return validate(t);
-    }
+    default CompletableFuture<ValidationResult> apply(T t) { return validate(t); }
 
     default Validator<T> merge(Validator<T> another) {
         return merge(this, another);
@@ -42,7 +41,37 @@ public interface Validator<T> extends Function<T, CompletableFuture<ValidationRe
 
     @SafeVarargs
     public static <S> Validator<S> mergeFailFast(Validator<S>... validators) { return new FailFastMergedValidator<>(validators); }
-    
+
+    public static <A, B> Validator<A> extract(Function<A, B> extractor, Validator<B> validator) {
+        return a -> validator.apply(extractor.apply(a));
+    }
+
+    public static <A, B> Validator<A> ifExists(Function<A, B> extractor, Validator<B> validator) {
+        return a -> Optional.ofNullable(extractor.apply(a))
+                .map(validator)
+                .orElseGet(Validator::valid);
+    }
+
+    public static <A, B> Validator<A> ifExistsOrElse(Function<A, B> extractor, Validator<B> validator, Message ifNotExists) {
+        return a -> Optional.ofNullable(extractor.apply(a))
+                .map(validator)
+                .orElseGet(() -> Validator.invalid(ifNotExists));
+    }
+
+    public static <A, B> Validator<A> forEach(Function<A, Iterable<B>> extractor, Validator<B> validator) {
+        // TODO
+        return identity();
+    }
+
+    public static <A, B> Validator<A> forEachFailFast(Function<A, Iterable<B>> extractor, Validator<B> validator) {
+        // TODO
+        return identity();
+    }
+
+    public static <A> Validator<A> identity() {
+        return a -> valid();
+    }
+
     //////////////////////////////////////////////////////////
     //     Effect (CompletableFuture) factory methods       //
     //////////////////////////////////////////////////////////
