@@ -13,6 +13,10 @@ class MergedValidator<T> implements Validator<T> {
 
     private List<Validator<T>> validators;
 
+    MergedValidator(List<Validator<T>> validators) {
+        this.validators = validators;
+    }
+
     @SafeVarargs
     MergedValidator(Validator<T>... validators) {
         this.validators = Arrays.asList(validators);

@@ -16,7 +16,7 @@ class FailFastMergedValidator<T> implements Validator<T> {
         this.validators = Arrays.asList(validators);
     }
 
-    private FailFastMergedValidator(List<Validator<T>> validators) {
+    FailFastMergedValidator(List<Validator<T>> validators) {
         this.validators = validators;
     }
 
