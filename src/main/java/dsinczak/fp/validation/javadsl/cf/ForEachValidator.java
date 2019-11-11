@@ -3,10 +3,10 @@ package dsinczak.fp.validation.javadsl.cf;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 public class ForEachValidator<T> implements Validator<Iterable<T>> {
 
@@ -18,13 +18,13 @@ public class ForEachValidator<T> implements Validator<Iterable<T>> {
 
     @Override
     public CompletableFuture<ValidationResult> validate(Iterable<T> iterable) {
-        var appliedValidators = StreamSupport.stream(iterable.spliterator(), false)
+        var appliedValidators = stream(iterable.spliterator(), false)
                 .map(t -> validator.validate(t))
-                .collect(Collectors.toList());
+                .collect(toList());
         return allOf(appliedValidators.toArray(CompletableFuture[]::new))
                 .thenApply(ignore -> appliedValidators.stream()
                         .map(CompletableFuture::join)
-                        .collect(Collectors.toList())
+                        .collect(toList())
                 ).thenApply(validationResults -> validationResults.stream()
                         .reduce(ValidationResult.success(), ValidationResult.concat)
                 );

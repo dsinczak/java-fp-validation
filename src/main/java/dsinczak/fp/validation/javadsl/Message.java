@@ -1,9 +1,10 @@
 package dsinczak.fp.validation.javadsl;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
+import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Representation of validation message backed by:
@@ -26,14 +27,16 @@ public abstract class Message {
          *
          * @param <E> this is just a 'try' to constraint implementators of this interface to enums.
          */
-        public interface Code<E extends Enum<E>> { }
+        public interface Code<E extends Enum<E>> {
+        }
 
         /**
          * Type-safe message parameter name.
          *
          * @param <E> this is just a 'try' to constraint implementators of this interface to enums.
          */
-        public interface Parm<E extends Enum<E>> { }
+        public interface Parm<E extends Enum<E>> {
+        }
 
         private Code code;
         private Map<Parm, Object> parameters;
@@ -49,7 +52,7 @@ public abstract class Message {
         }
 
         public Map<Parm, Object> getParameters() {
-            return Collections.unmodifiableMap(parameters);
+            return unmodifiableMap(parameters);
         }
 
         @Override
@@ -74,7 +77,7 @@ public abstract class Message {
                     // TODO make it lazy
                     parameters.entrySet().stream()
                             .map(e -> "(" + e.getKey() + ": " + e.getValue() + ")")
-                            .collect(Collectors.joining(",")) +
+                            .collect(joining(",")) +
                     "]}";
         }
     }

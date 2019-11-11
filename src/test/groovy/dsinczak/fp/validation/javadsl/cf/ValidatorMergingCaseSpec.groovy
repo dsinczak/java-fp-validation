@@ -8,7 +8,7 @@ class ValidatorMergingCaseSpec extends Specification {
 
     def 'should merge validators and run all validations'() {
         given:
-            def userValidator = Validator.merge(nameValidator, surnameValidator, ageValidator)
+            def userValidator = Validators.merge(nameValidator, surnameValidator, ageValidator)
         when:
             def result = userValidator.validate(new User(name:null, surname: null, age:200)).join()
         then:
@@ -21,7 +21,7 @@ class ValidatorMergingCaseSpec extends Specification {
 
     def 'should merge validators and return merged result'() {
         given:
-            def userValidator = Validator.merge(nameValidator, surnameValidator, ageValidator)
+            def userValidator = Validators.merge(nameValidator, surnameValidator, ageValidator)
         when:
             def result = userValidator.validate(new User(name:null, surname: "Kowalski", age:200)).join()
         then:
@@ -33,7 +33,7 @@ class ValidatorMergingCaseSpec extends Specification {
 
     def 'should merge validators with fail fast and run first validation only'() {
         given:
-            def userValidator = Validator.mergeFailFast(nameValidator, surnameValidator, ageValidator)
+            def userValidator = Validators.mergeFailFast(nameValidator, surnameValidator, ageValidator)
         when:
             def result = userValidator.validate(new User(name:null, surname: null, age:200)).join()
         then:

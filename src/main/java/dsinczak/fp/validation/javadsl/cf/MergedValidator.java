@@ -5,9 +5,9 @@ import dsinczak.fp.validation.javadsl.ValidationResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.stream.Collectors.toList;
 
 class MergedValidator<T> implements Validator<T> {
 
@@ -24,11 +24,13 @@ class MergedValidator<T> implements Validator<T> {
 
     @Override
     public CompletableFuture<ValidationResult> validate(T t) {
-        var appliedValidators = validators.stream().map(validator -> validator.apply(t)).collect(Collectors.toList());
+        var appliedValidators = validators.stream()
+                .map(validator -> validator.apply(t))
+                .collect(toList());
         return allOf(appliedValidators.toArray(CompletableFuture[]::new))
                 .thenApply(ignore -> appliedValidators.stream()
                         .map(CompletableFuture::join)
-                        .collect(Collectors.toList())
+                        .collect(toList())
                 )
                 .thenApply(validationResults -> validationResults.stream()
                         .reduce(ValidationResult.success(), ValidationResult.concat)

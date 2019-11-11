@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 class FailFastMergedValidator<T> implements Validator<T> {
 
     private List<Validator<T>> validators;
@@ -39,7 +41,7 @@ class FailFastMergedValidator<T> implements Validator<T> {
                                 : validators.subList(1, validators.size())
                 ).validate(t);
             } else {
-                return CompletableFuture.completedFuture(validationResult);
+                return completedFuture(validationResult);
             }
         };
     }

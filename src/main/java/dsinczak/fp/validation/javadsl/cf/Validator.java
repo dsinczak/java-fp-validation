@@ -4,9 +4,7 @@ import dsinczak.fp.validation.javadsl.Message;
 import dsinczak.fp.validation.javadsl.Message.ComplexMessage;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -30,65 +28,15 @@ public interface Validator<T> extends Function<T, CompletableFuture<ValidationRe
     }
 
     default Validator<T> merge(Validator<T> another) {
-        return merge(this, another);
+        return Validators.merge(this, another);
     }
 
     default Validator<T> mergeFailFast(Validator<T> another) {
-        return mergeFailFast(this, another);
-    }
-
-    @SafeVarargs
-    public static <S> Validator<S> merge(Validator<S>... validators) {
-        return new MergedValidator<>(validators);
-    }
-
-    @SafeVarargs
-    public static <S> Validator<S> mergeFailFast(Validator<S>... validators) {
-        return new FailFastMergedValidator<>(validators);
-    }
-
-    public static <S> Validator<S> merge(List<Validator<S>> validators) {
-        return new MergedValidator<>(validators);
-    }
-
-    public static <S> Validator<S> mergeFailFast(List<Validator<S>> validators) {
-        return new FailFastMergedValidator<>(validators);
-    }
-
-    public static <A, B> Validator<A> extract(Function<A, B> extractor, Validator<B> validator) {
-        return a -> validator.apply(extractor.apply(a));
-    }
-
-    public static <A, B> Validator<A> ifExists(Function<A, B> extractor, Validator<B> validator) {
-        return a -> Optional.ofNullable(extractor.apply(a))
-                .map(validator)
-                .orElseGet(Validator::valid);
-    }
-
-    public static <A, B> Validator<A> ifExistsOrElse(Function<A, B> extractor, Validator<B> validator, Message orElseMessage) {
-        return a -> Optional.ofNullable(extractor.apply(a))
-                .map(validator)
-                .orElseGet(() -> Validator.invalid(orElseMessage));
-    }
-
-    public static <A> Validator<Iterable<A>> forEach(Validator<A> validator) {
-        return new ForEachValidator<>(validator);
-    }
-
-    public static <A> Validator<Iterable<A>> forEachFailFast(Validator<A> validator) {
-        return new FailFastForEachValidator<>(validator);
-    }
-
-    public static <A, B> Validator<A> forEach(Function<A, Iterable<B>> extractor, Validator<B> validator) {
-        return a -> forEach(validator).apply(extractor.apply(a));
-    }
-
-    public static <A, B> Validator<A> forEachFailFast(Function<A, Iterable<B>> extractor, Validator<B> validator) {
-        return a -> forEachFailFast(validator).apply(extractor.apply(a));
+        return Validators.mergeFailFast(this, another);
     }
 
     public static <A> Validator<A> neutral() {
-        return a -> valid();
+        return a -> Validator.valid();
     }
 
     //////////////////////////////////////////////////////////
