@@ -1,6 +1,7 @@
 package dsinczak.fp.validation.javadsl.cf;
 
 import dsinczak.fp.validation.javadsl.Message;
+import dsinczak.fp.validation.javadsl.ValidationResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +78,8 @@ public abstract class Validators {
     ////////////////////////////
 
     public static <A> Validator<A> exceptionally(Validator<A> validator, Function<Throwable, Message> messageProvider) {
-        return Validator.neutral();
+        return a -> validator.apply(a)
+                .exceptionally(throwable -> ValidationResult.failed(messageProvider.apply(throwable)));
     }
 
 }

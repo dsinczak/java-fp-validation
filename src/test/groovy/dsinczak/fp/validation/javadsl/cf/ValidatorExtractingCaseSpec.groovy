@@ -38,7 +38,7 @@ class ValidatorExtractingCaseSpec extends Specification {
             result == ValidationResult.failed("String: Death Star #4 is not valid street")
     }
 
-    def 'should'() {
+    def 'should detect null fields with ifExistsOrElse and return proper message when field has null value'() {
         given:
             def cmd = new CreateCustomerCommand(
                     customer: new Customer(
