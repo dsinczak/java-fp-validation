@@ -1,9 +1,11 @@
 package dsinczak.fp.validation.javadsl.cf;
 
+import dsinczak.fp.validation.javadsl.ErrorCase;
 import dsinczak.fp.validation.javadsl.Message;
 import dsinczak.fp.validation.javadsl.Message.ComplexMessage;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -33,6 +35,14 @@ public interface Validator<T> extends Function<T, CompletableFuture<ValidationRe
 
     default Validator<T> mergeFailFast(Validator<T> another) {
         return Validators.mergeFailFast(this, another);
+    }
+
+    default Validator<T> exceptionally(Function<Throwable, Message> messageProvider) {
+        return Validators.exceptionally(this, messageProvider);
+    }
+
+    default Validator<T> exceptionally(ErrorCase ... cases) {
+        return Validators.exceptionally(this, cases);
     }
 
     public static <A> Validator<A> neutral() {

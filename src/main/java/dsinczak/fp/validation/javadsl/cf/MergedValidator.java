@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.concurrent.CompletableFuture.allOf;
+import static dsinczak.fp.validation.javadsl.cf.CfCommon.sequence;
 import static java.util.stream.Collectors.toList;
 
 class MergedValidator<T> implements Validator<T> {
@@ -27,11 +27,7 @@ class MergedValidator<T> implements Validator<T> {
         var appliedValidators = validators.stream()
                 .map(validator -> validator.apply(t))
                 .collect(toList());
-        return allOf(appliedValidators.toArray(CompletableFuture[]::new))
-                .thenApply(ignore -> appliedValidators.stream()
-                        .map(CompletableFuture::join)
-                        .collect(toList())
-                )
+        return sequence(appliedValidators)
                 .thenApply(validationResults -> validationResults.stream()
                         .reduce(ValidationResult.success(), ValidationResult.concat)
                 );

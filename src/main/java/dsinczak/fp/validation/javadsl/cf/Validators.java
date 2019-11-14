@@ -1,15 +1,21 @@
 package dsinczak.fp.validation.javadsl.cf;
 
+import dsinczak.fp.validation.javadsl.ErrorCase;
 import dsinczak.fp.validation.javadsl.Message;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static dsinczak.fp.validation.javadsl.cf.CfCommon.softenedException;
 
 public abstract class Validators {
 
-    private Validators() {}
+    private Validators() {
+    }
 
     ////////////////////////////
     //        MERGING         //
@@ -81,5 +87,24 @@ public abstract class Validators {
         return a -> validator.apply(a)
                 .exceptionally(throwable -> ValidationResult.failed(messageProvider.apply(throwable)));
     }
+
+    public static <A> Validator<A> exceptionally(Validator<A> validator, List<ErrorCase> cases) {
+        return a -> validator.apply(a)
+                .exceptionally(throwable ->
+                        cases.stream()
+                                .filter(ec -> ec.matches(throwable))
+                                .findFirst()
+                                .map(errorCase -> errorCase.handle(throwable))
+                                .orElseGet(() -> {
+                                    softenedException(throwable);
+                                    return null;
+                                })
+        );
+    }
+
+    public static <A> Validator<A> exceptionally(Validator<A> validator, ErrorCase... cases) {
+        return exceptionally(validator, Arrays.stream(cases).collect(Collectors.toList()));
+    }
+
 
 }
