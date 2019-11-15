@@ -1,6 +1,7 @@
 package dsinczak.fp.validation.javadsl;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * This interface is basically specific type of partial function.
@@ -11,8 +12,8 @@ public interface ErrorCase {
 
     boolean matches(Throwable t);
 
-    static <T extends Throwable> ErrorCase $(Class<T> tc, Function<Throwable, Message> messageProvider) {
-        return new ErrorCase(){
+    static ErrorCase $(Predicate<Throwable> tp, Function<Throwable, Message> messageProvider) {
+        return new ErrorCase() {
 
             @Override
             public ValidationResult handle(Throwable t) {
@@ -21,9 +22,17 @@ public interface ErrorCase {
 
             @Override
             public boolean matches(Throwable t) {
-                return tc.isInstance(t);
+                return tp.test(t);
             }
         };
+    }
+
+    static ErrorCase $(Class<? extends Throwable> tc, Function<Throwable, Message> messageProvider) {
+        return $(tc::isInstance, messageProvider);
+    }
+
+    static ErrorCase $(Function<Throwable, Message> messageProvider) {
+        return $(t -> true, messageProvider);
     }
 
 }
