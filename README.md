@@ -52,8 +52,6 @@ What is noteworthy is the fact that we have 2 types of validator combinations he
 * all validations are started regardless of the previous result: ``merge.(...)``
 * validations are carried out in turn and stopped in the event of the first failure: ``mergeFailFast(...)``
 
-
-395/5000
 Thanks to this approach, we have full control over the chain of validation calls. We can interrupt it as soon as possible 
 and return to the caller with the result or perform all validations to return as many validation errors as possible. 
 Additionally, such joining can be nested on many levels (nothing stands in the way of joining validators connected with 
