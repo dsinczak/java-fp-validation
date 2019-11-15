@@ -109,9 +109,7 @@ public abstract class Message {
 
         @Override
         public String toString() {
-            return "Message{" +
-                    "value='" + value + '\'' +
-                    "} " + super.toString();
+            return value;
         }
     }
 

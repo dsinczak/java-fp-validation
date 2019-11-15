@@ -80,7 +80,7 @@ public abstract class ValidationResult {
         public String toString() {
             return "FailedValidation{" +
                     "messages=" + messages +
-                    "} " + super.toString();
+                    "} ";
         }
     }
 
