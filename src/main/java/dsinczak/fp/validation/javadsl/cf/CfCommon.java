@@ -8,6 +8,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.stream.Collectors.toList;
 
 abstract class CfCommon {
+
     private CfCommon() {
     }
 
@@ -25,15 +26,6 @@ abstract class CfCommon {
                         .map(CompletableFuture::join)
                         .collect(toList())
                 );
-    }
-
-    static <T extends Throwable> T softenedException(final T e) {
-        uncheck(e);
-        return e; //never reached.
-    }
-
-    static <T extends Throwable> void uncheck(Throwable throwable) throws T {
-        throw (T) throwable;
     }
 
 }

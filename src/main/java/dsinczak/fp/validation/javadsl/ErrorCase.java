@@ -1,5 +1,6 @@
 package dsinczak.fp.validation.javadsl;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -35,4 +36,23 @@ public interface ErrorCase {
         return $(t -> true, messageProvider);
     }
 
+    static ValidationResult findOrRethrow(List<ErrorCase> cases, Throwable throwable) {
+        return cases.stream()
+                .filter(ec -> ec.matches(throwable))
+                .findFirst()
+                .map(errorCase -> errorCase.handle(throwable))
+                .orElseGet(() -> {
+                    softenedException(throwable);
+                    return null;
+                });
+    }
+
+    private static <T extends Throwable> void softenedException(final T e) {
+        uncheck(e);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> void uncheck(Throwable throwable) throws T {
+        throw (T) throwable;
+    }
 }

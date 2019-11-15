@@ -5,7 +5,6 @@ import dsinczak.fp.validation.javadsl.Message;
 import dsinczak.fp.validation.javadsl.Message.ComplexMessage;
 import dsinczak.fp.validation.javadsl.ValidationResult;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -15,7 +14,15 @@ import static dsinczak.fp.validation.javadsl.ValidationResult.success;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
- * Validator interface.
+ * Validator interface. Basically validator is just a function that takes type and returns validation result of value of
+ * that type wrapped in completable future effect. What is the strength of this solution is composition. Where we can
+ * compose complex object validation of simple more granular validations.
+ * Validator uses concept of Monoid:
+ * <ul>
+ *    <li>identity element: {@link Validator#neutral()}</li>
+ *    <li>binary operation: {@link Validator#merge(Validator)}</li>
+ * </ul>
+ * but extends this concept with other operations useful in process of validation (like fail fast and exceptions handling)
  *
  * @param <T> validated type
  */
@@ -41,7 +48,7 @@ public interface Validator<T> extends Function<T, CompletableFuture<ValidationRe
         return Validators.exceptionally(this, messageProvider);
     }
 
-    default Validator<T> exceptionally(ErrorCase ... cases) {
+    default Validator<T> exceptionally(ErrorCase... cases) {
         return Validators.exceptionally(this, cases);
     }
 
