@@ -5,6 +5,16 @@ each validator is simply a function) that allows for very easy composition and r
 Additionally, the project is an attempt to show (and experiment with) functional programming approach (or being more 
 critical: functional'ish).
 
+Main drivers:
+* Validator as a function
+* Get the most of declarative and functional programming (but without exaggeration)
+* Structure of validators should be easily composed
+* Easy declarative exception handling 
+* Easy to test
+* Easy to use with [DDD](https://en.wikipedia.org/wiki/Domain-driven_design) aggregates. Aggregates protects business
+logic invariants in many ways, one of them is incoming requests validation (specification is one of the patterns used).
+This library is in some ways reification of specification pattern. Allowing easy validation of commands send to aggregate.
+
 ## Overview
 The mechanism that I created has already been used by me in several commercial projects (sometimes in more, sometimes 
 in less extensive form) and so far it worked quite well so I decided to create a publicly available version. 
@@ -18,28 +28,32 @@ he will base his implementation (sync, *CompletableFuture*, *vavr.Future*, *vavr
 would decide)
 
 ## Usage
+
 Validator definition is basically a function that takes argument of certain type and returns ValidationResult instance:
-
 ````java
-        Validator<String> startsWithCapitalLetter = str ->
-                Character.isUpperCase(str.charAt(0))
-                        ? success()
-                        : failed("Name must start with capital letter");
+Validator<String> startsWithCapitalLetter = str ->
+        Character.isUpperCase(str.charAt(0))
+                ? success()
+                : failed("Name must start with capital letter");
 
-        Validator<String> onlyLetters = str ->
-                str.chars().allMatch(Character::isLetter)
-                        ? success()
-                        : failed("Only letters are allowed in name");
-
-        Validator<String> nameValidator = startsWithCapitalLetter.merge(onlyLetters);
-        Validator<String> nameFFValidator = startsWithCapitalLetter.mergeFailFast(onlyLetters);
-
-        System.out.println(nameValidator.validate("c3PO"));
-        System.out.println(nameFFValidator.validate("c3PO"));
+Validator<String> onlyLetters = str ->
+        str.chars().allMatch(Character::isLetter)
+                ? success()
+                : failed("Only letters are allowed in name");
 ````
 
-execution:
+### Composition
+The composition allows you to build complex validation chains from smaller components. This makes the code easy to 
+maintain and test. In addition, re-usability is an additional advantage.
 
+````java
+Validator<String> nameValidator = startsWithCapitalLetter.merge(onlyLetters);
+Validator<String> nameFFValidator = startsWithCapitalLetter.mergeFailFast(onlyLetters);
+
+System.out.println(nameValidator.validate("c3PO"));
+System.out.println(nameFFValidator.validate("c3PO"));
+````
+execution:
 ```
 FailedValidation{messages=[Name must start with capital letter, Only letters are allowed in name]} 
 FailedValidation{messages=[Name must start with capital letter]} 
@@ -57,6 +71,7 @@ and return to the caller with the result or perform all validations to return as
 Additionally, such joining can be nested on many levels (nothing stands in the way of joining validators connected with 
 another chain).
 
+### Extraction
 Now, for the purpose of another example lets introduce domain class:
 ````java
 class User {
@@ -102,24 +117,80 @@ the second, validator of name type. The resulting validator will only be called 
 otherwise validation will not occur.
 * **ifExistsOrElse** - unlike ifExists, it will trigger validation when the field is not null or return 
 a validation error with the message defined as the third argument when field is null
- 
+
+### Collections
 We can also validate collections of objects combining single object validator:
 ```java
-var users = List.of(
-    new User("Damian", 34),
-    new User("c3PO", 180),
-    new User("Damian", null),
-    new User(null, 34) 
-);
+ var names = List.of("Damian", "Kinga", "Oliwier", "r2D2", "c3PO");
 
-Validator<Iterable<User>> usersValidator = Validators.forEach(userValidator);
-Validator<Iterable<User>> usersFailFastValidator = Validators.forEachFailFast(userValidator);
+Validator<Iterable<String>> namesValidator = Validators.forEach(nameValidator);
+Validator<Iterable<String>> namesFailFastValidator = Validators.forEachFailFast(nameValidator);
+
+System.out.println(namesValidator.validate(names));
+System.out.println(namesFailFastValidator.validate(names));
+```
+execution:
+```java
+FailedValidation{messages=[Name must start with capital letter, Only letters are allowed in name, Name must start with capital letter, Only letters are allowed in name]} 
+FailedValidation{messages=[Name must start with capital letter, Only letters are allowed in name]} 
 ```
 Again, we have to flavors:
 * **forEach** - that validates all objects in collection 
 * **forEachFailFast** - stops validation after first failure
 
+### Exception handling
+Exception handling allows recovery from error and return of properly formatted validation message.
+````java
+Validator<User> throwingValidator1 = u -> {
+     if (u.name.equals("bad state"))
+         throw new IllegalStateException("Something went wrong with state");
+     else
+         return ValidationResult.success();
+};
+
+Validator<User> throwingValidator2 = u -> {
+     if (u.name.equals("bad argument"))
+         throw new IllegalArgumentException("These are not the druids you are looking for");
+     else if (u.name.equals("null is emptiness"))
+         throw new NullPointerException("Darkness is everywhere");
+     else
+         return ValidationResult.success();
+};
+
+Validator<User> mergedThrowing = Validators.merge(throwingValidator1, throwingValidator2)
+     .exceptionally(
+        $(IllegalStateException.class, t->Message.of("State problem: "+t.getMessage())),
+        $(IllegalArgumentException.class, t->Message.of("Argue with this: "+t.getMessage())),
+        $(t->Message.of("Something unexpected happened: " + t.getMessage()))
+);
+
+System.out.println(mergedThrowing.validate(new User("bad state", 34)));
+System.out.println(mergedThrowing.validate(new User("bad argument", 34)));
+System.out.println(mergedThrowing.validate(new User("null is emptiness", 34)));
+````
+execution:
+```
+FailedValidation{messages=[State problem: Something went wrong with state]} 
+FailedValidation{messages=[Argue with this: These are not the druids you are looking for]} 
+FailedValidation{messages=[Something unexpected happened: Darkness is everywhere]} 
+```
+Error handling is very simple and resembles (intentionally) switch ... case construction. We provide the exception 
+class and functions that provides the validation message, the rest of plumbing the library does for us.
+
+### Type-safe parametrized validation message
+TODO Describe
+
+### Async API (based on CompletableFuture)
+TODO Describe
+
 ## Examples
+As real world examples speak more than academic considerations so lets build small sample domain and validate it with
+some rules. 
 All examples presented in paragraph can be found [here](/src/test/groovy/dsinczak/fp/validation/javadsl/example/ComplexDomainValidationExampleCaseSpec.groovy)
 
 ## Known Issues
+* Async API thread control - currently it is not possible to control the pool on which the validators are combined, 
+the field extraction and error handling. It is necessary to extend the API because standard context switching 
+rules are quite complicated in the case of CompletableFuture and can often lead to the common pool.
+* Grouping validators - so we can group validation results in more meaning sets (e.g. all name related validations 
+are grouped with each other end distinguishable from other validation results).
