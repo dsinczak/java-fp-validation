@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.joining;
  * Two types of messages are implemented:
  * <ul>
  *     <li>{@link SimpleMessage} where message is represented by string value</li>
- *     <li>{@link ComplexMessage} which is type-safe representation of message represented by message code and message parameters</li>
+ *     <li>{@link ParametrizedMessage} which is type-safe representation of message represented by message code and message parameters</li>
  * </ul>
  */
 public abstract class Message {
@@ -20,7 +20,7 @@ public abstract class Message {
     private Message() {
     }
 
-    public static final class ComplexMessage extends Message {
+    public static final class ParametrizedMessage extends Message {
 
         /**
          * Type-safe message name (identifier).
@@ -41,7 +41,7 @@ public abstract class Message {
         private Code code;
         private Map<Parm, Object> parameters;
 
-        private ComplexMessage(Code code, Map<Parm, Object> parameters) {
+        private ParametrizedMessage(Code code, Map<Parm, Object> parameters) {
             Objects.requireNonNull(code, "Message code cannot be null");
             this.code = code;
             this.parameters = parameters;
@@ -58,8 +58,8 @@ public abstract class Message {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof ComplexMessage)) return false;
-            ComplexMessage other = (ComplexMessage) o;
+            if (!(o instanceof ParametrizedMessage)) return false;
+            ParametrizedMessage other = (ParametrizedMessage) o;
 
             return this.code == other.code
                     && this.parameters.entrySet().stream()
@@ -113,12 +113,12 @@ public abstract class Message {
         }
     }
 
-    public static Message of(ComplexMessage.Code code, Map<ComplexMessage.Parm, Object> parameters) {
-        return new ComplexMessage(code, parameters != null ? Map.copyOf(parameters) : Map.of());
+    public static Message of(ParametrizedMessage.Code code, Map<ParametrizedMessage.Parm, Object> parameters) {
+        return new ParametrizedMessage(code, parameters != null ? Map.copyOf(parameters) : Map.of());
     }
 
-    public static Message of(ComplexMessage.Code code) {
-        return new ComplexMessage(code, Map.of());
+    public static Message of(ParametrizedMessage.Code code) {
+        return new ParametrizedMessage(code, Map.of());
     }
 
     public static Message of(String message) {

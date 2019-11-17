@@ -50,8 +50,8 @@ maintain and test. In addition, re-usability is an additional advantage.
 Validator<String> nameValidator = startsWithCapitalLetter.merge(onlyLetters);
 Validator<String> nameFFValidator = startsWithCapitalLetter.mergeFailFast(onlyLetters);
 
-System.out.println(nameValidator.validate("c3PO"));
-System.out.println(nameFFValidator.validate("c3PO"));
+println(nameValidator.validate("c3PO"));
+println(nameFFValidator.validate("c3PO"));
 ````
 execution:
 ```
@@ -97,16 +97,16 @@ Validator<User> userValidator = Validators.merge(
 ````
 execution:
 ````java
-System.out.println(userValidator.validate(new User("Damian", 34)));
+println(userValidator.validate(new User("Damian", 34)));
 // SuccessfulValidation
 
-System.out.println(userValidator.validate(new User("c3PO", 180)));
+println(userValidator.validate(new User("c3PO", 180)));
 // FailedValidation{messages=[Name must start with capital letter, Only letters are allowed in name, Nobody lives that long]} 
 
-System.out.println(userValidator.validate(new User("Damian", null)));
+println(userValidator.validate(new User("Damian", null)));
 // FailedValidation{messages=[Age is a must]} 
 
-System.out.println(userValidator.validate(new User(null, 34)));
+println(userValidator.validate(new User(null, 34)));
 // SuccessfulValidation
 ````
 
@@ -126,8 +126,8 @@ We can also validate collections of objects combining single object validator:
 Validator<Iterable<String>> namesValidator = Validators.forEach(nameValidator);
 Validator<Iterable<String>> namesFailFastValidator = Validators.forEachFailFast(nameValidator);
 
-System.out.println(namesValidator.validate(names));
-System.out.println(namesFailFastValidator.validate(names));
+println(namesValidator.validate(names));
+println(namesFailFastValidator.validate(names));
 ```
 execution:
 ```java
@@ -162,11 +162,11 @@ Validator<User> mergedThrowing = Validators.merge(throwingValidator1, throwingVa
         $(IllegalStateException.class, t->Message.of("State problem: "+t.getMessage())),
         $(IllegalArgumentException.class, t->Message.of("Argue with this: "+t.getMessage())),
         $(t->Message.of("Something unexpected happened: " + t.getMessage()))
-);
+     );
 
-System.out.println(mergedThrowing.validate(new User("bad state", 34)));
-System.out.println(mergedThrowing.validate(new User("bad argument", 34)));
-System.out.println(mergedThrowing.validate(new User("null is emptiness", 34)));
+println(mergedThrowing.validate(new User("bad state", 34)));
+println(mergedThrowing.validate(new User("bad argument", 34)));
+println(mergedThrowing.validate(new User("null is emptiness", 34)));
 ````
 execution:
 ```
@@ -178,7 +178,39 @@ Error handling is very simple and resembles (intentionally) switch ... case cons
 class and functions that provides the validation message, the rest of plumbing the library does for us.
 
 ### Type-safe parametrized validation message
-TODO Describe
+Providing explicit text in a validation message is in many cases insufficient (e.g. internationalization). For this 
+purpose, the message should carry with it the identifier of the validation message and the parameters that can be 
+used for parametrization.
+
+First we need to define enumerations for message id and parameters:
+````java
+enum MessageId implements ParametrizedMessage.Code<MessageId> {
+  USER_NAME_IS_INVALID,
+  USER_AGE_IS_INVALID,
+  USER_VALIDATION_FAILED
+}
+
+enum Parameters implements  ParametrizedMessage.Parm<Parameters> {
+  NAME,
+  AGE,
+  USER
+}
+````
+Thanks to this, we can now define a message without having to write plain text:
+````java
+Message.of(USER_NAME_IS_INVALID, Map.of(NAME, "Damian"));
+Message.of(USER_AGE_IS_INVALID, Map.of(AGE, 190));
+````
+The above messages can be rendered in any language. For example, using the internationalization properties file:
+```
+USER_NAME_IS_INVALID = User name {} is invalid.
+USER_AGE_IS_INVALID = User age {} is invalid. Myst be between 1 and 150
+```
+We can pass even more complex objects as parameters:
+```java
+Message.of(USER_VALIDATION_FAILED, Map.of(USER, user));
+```
+and leave the decision on how to render the message to mechanisms independent of validation.
 
 ### Async API (based on CompletableFuture)
 TODO Describe

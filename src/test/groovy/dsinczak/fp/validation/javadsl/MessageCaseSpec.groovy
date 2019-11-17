@@ -2,7 +2,7 @@ package dsinczak.fp.validation.javadsl
 
 import spock.lang.Specification
 
-import static dsinczak.fp.validation.javadsl.Message.ComplexMessage.*
+import static dsinczak.fp.validation.javadsl.Message.ParametrizedMessage.*
 import static dsinczak.fp.validation.javadsl.MessageCaseSpec.MessageCodes.USER_NOT_FOUND
 import static dsinczak.fp.validation.javadsl.MessageCaseSpec.Parms.USER_NAME
 import static dsinczak.fp.validation.javadsl.MessageCaseSpec.Parms.USER_SURNAME
